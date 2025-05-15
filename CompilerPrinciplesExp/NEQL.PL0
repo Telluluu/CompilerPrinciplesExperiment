@@ -1,0 +1,12 @@
+program neql;
+else;
+/=;
+*=;
+!;
+var a,b;
+begin
+ read(b);
+ b:=0;
+ if a<>0 then b:=1;
+ write(b);
+end.

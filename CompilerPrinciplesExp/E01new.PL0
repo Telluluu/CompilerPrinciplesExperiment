@@ -1,0 +1,5 @@
+program ex01;
+88
+:=
+read(b);
+end.
