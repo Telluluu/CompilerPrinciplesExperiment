@@ -451,6 +451,7 @@ int getsym()
 							{
 								sym = mulsym;
 								std::println("双符号");
+								getchdo;
 							}
 							break;
 
@@ -460,6 +461,7 @@ int getsym()
 							{
 								sym = divsym;
 								std::println("双符号");
+								getchdo;
 							}
 							break;
 
@@ -469,6 +471,7 @@ int getsym()
 							{
 								sym = incsym;
 								std::println("双符号");
+								getchdo;
 							}
 							break;
 
@@ -478,6 +481,7 @@ int getsym()
 							{
 								sym = decsym;
 								std::println("双符号");
+								getchdo;
 							}
 							break;
 
@@ -487,6 +491,7 @@ int getsym()
 							{
 								sym = orsym;
 								std::println("双符号");
+								getchdo;
 							}
 							break;
 
