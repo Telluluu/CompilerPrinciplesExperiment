@@ -27,6 +27,7 @@
   <ItemGroup>
     <None Include="E01.PL0" />
     <None Include="E01new.PL0" />
+    <None Include="ELSE.PL0" />
     <None Include="NEQL.PL0" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

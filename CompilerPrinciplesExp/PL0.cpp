@@ -258,7 +258,7 @@ int mulset(bool* sr, bool* s1, bool* s2, int n)
 void error(int n)
 
 {
-	//std::println("error, n = {}", n);
+	std::println("error code {}", n);
 	char space[81];
 	memset(space, 32, 81); printf("-------%c\n", ch);
 	space[cc - 1] = 0;//出错时当前符号已经读完，所以cc-1
@@ -850,8 +850,10 @@ int statement(bool* fsys, int* ptx, int lev)
 {
 	int i, cx1, cx2;
 	bool nxtlev[symnum];
+	// 赋值语句
 	if (sym == ident)
 	{
+		// 查找id符号表中的位置i，判断是否是变量
 		i = position(id, *ptx);
 		if (i == 0)
 		{
@@ -867,6 +869,7 @@ int statement(bool* fsys, int* ptx, int lev)
 			else
 			{
 				getsymdo;
+				// 匹配赋值符号
 				if (sym == becomes)
 				{
 					getsymdo;
@@ -875,8 +878,10 @@ int statement(bool* fsys, int* ptx, int lev)
 				{
 					error(13);
 				}
+				// 解析右侧等式
 				memcpy(nxtlev, fsys, sizeof(bool) * symnum);
 				expressiondo(nxtlev, ptx, lev);
+				// 生成sto指令，把右侧等式的值赋给左侧变量
 				if (i != 0)
 				{
 					gendo(sto, lev - table[i].level, table[i].adr);
@@ -886,15 +891,19 @@ int statement(bool* fsys, int* ptx, int lev)
 	}
 	else
 	{
+		// read输入语句
 		if (sym == readsym)
 		{
 			getsymdo;
+			// 解析左括号
 			if (sym != lparen)
 			{
 				error(34);
 			}
 			else
 			{
+				// 匹配左括号后依次获取变量
+				// 并为每个变量依次生成输入指令
 				do
 				{
 					getsymdo;
@@ -918,6 +927,7 @@ int statement(bool* fsys, int* ptx, int lev)
 					getsymdo;
 				} while (sym == comma);	/*一条read语句可读多个变量 */
 			}
+			// 匹配右括号
 			if (sym != rparen)
 			{
 				error(33);			/* 格式错误，应是右括号*/
@@ -933,6 +943,8 @@ int statement(bool* fsys, int* ptx, int lev)
 		}
 		else
 		{
+			// write输出语句
+			// 类似read，但这里是对每个表达式求值后输出
 			if (sym == writesym)			/* 准备按照write语句处理，与read类似*/
 			{
 				getsymdo;
@@ -960,6 +972,8 @@ int statement(bool* fsys, int* ptx, int lev)
 			}
 			else
 			{
+				// 过程调用语句
+				// 检查是否是过程名，并生成cal指令调用它
 				if (sym == callsym)		/* 准备按照call语句处理*/
 				{
 					getsymdo;
@@ -990,13 +1004,16 @@ int statement(bool* fsys, int* ptx, int lev)
 				}
 				else
 				{
+					// 条件语句
 					if (sym == ifsym)     /*准备按照if语句处理*/
 					{
 						getsymdo;
 						memcpy(nxtlev, fsys, sizeof(bool) * symnum);
 						nxtlev[thensym] = true;
 						nxtlev[dosym] = true;    /*后跟符号为then或do*/
+						nxtlev[elsesym] = true; // 补充:后跟符号为else
 						conditiondo(nxtlev, ptx, lev);   /*调用条件处理（逻辑运算）函数*/
+
 						if (sym == thensym)
 						{
 							getsymdo;
@@ -1005,18 +1022,37 @@ int statement(bool* fsys, int* ptx, int lev)
 						{
 							error(16);          /*缺少then*/
 						}
+
 						cx1 = cx;                /*保存当前指令地址*/
 						gendo(jpc, 0, 0);        /*生成条件跳转指令，跳转地址暂写0*/
 						statementdo(fsys, ptx, lev);   /*处理then后的语句*/
+
 						code[cx1].a = cx;      /*经statement处理后，cx为then后语句执行
 							完的位置，它正是前面未定的跳转地址*/
+
+						if (sym == elsesym)
+						{
+							cx2 = cx;
+							gendo(jmp, 0, 0);				//跳过else的无条件跳转
+							code[cx1].a = cx;				//回填jpc的跳转地址，跳转到else
+							getsymdo;
+							statementdo(fsys, ptx, lev);	//处理else后的语句
+							code[cx2].a = cx;
+						}
+						else
+						{
+							code[cx1].a = cx;				//没有else，回填jpc到if后面
+						}
 					}
 					else
 					{
+						// 复合语句
 						if (sym == beginsym)   /*准备按照复合语句处理*/
 						{
 							getsymdo;
 							memcpy(nxtlev, fsys, sizeof(bool) * symnum);
+							// 每个语句之间用分号或者end分隔
+							// 生成顺序执行的代码
 							nxtlev[semicolon] = true;
 							nxtlev[endsym] = true;/*后跟符号为分号或end*/
 							/*循环调用语句处理函数，直到下一个符号不是语句开始符号或收到end*/
@@ -1044,6 +1080,7 @@ int statement(bool* fsys, int* ptx, int lev)
 						}
 						else
 						{
+							// 循环语句
 							if (sym == whilesym)/*准备按照while语句处理*/
 							{
 								cx1 = cx;        /*保存判断条件超作的位置*/
@@ -1067,6 +1104,7 @@ int statement(bool* fsys, int* ptx, int lev)
 							}
 							else
 							{
+								// default情况，执行出错处理
 								memset(nxtlev, 0, sizeof(bool) * symnum);/*语句结束无补救集合*/
 								testdo(fsys, nxtlev, 19);/*检测语句结束的正确性*/
 							}

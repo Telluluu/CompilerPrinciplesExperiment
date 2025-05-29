@@ -1,0 +1,8 @@
+var a,b,c;
+begin
+    a:=1;
+    read(b);
+    if a=b then
+        write(a)
+    else write(b);
+end.
