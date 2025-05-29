@@ -1027,9 +1027,6 @@ int statement(bool* fsys, int* ptx, int lev)
 						gendo(jpc, 0, 0);        /*生成条件跳转指令，跳转地址暂写0*/
 						statementdo(fsys, ptx, lev);   /*处理then后的语句*/
 
-						code[cx1].a = cx;      /*经statement处理后，cx为then后语句执行
-							完的位置，它正是前面未定的跳转地址*/
-
 						if (sym == elsesym)
 						{
 							cx2 = cx;
